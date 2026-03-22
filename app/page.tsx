@@ -1,65 +1,159 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import Link from "next/link"
+import { Suspense, useMemo } from "react"
+import { Calculator } from "lucide-react"
+import { FEATURED_CURRENCIES } from "@/lib/frankfurter/constants"
+import { Button } from "@/components/ui/button"
+import { ArgentinaDollarPanel } from "@/components/argentina-dollar-panel"
+import { BaseCurrencyPicker } from "@/components/base-currency-picker"
+import { CurrencyRateCard } from "@/components/currency-rate-card"
+import { CurrencyRatesTable } from "@/components/currency-rates-table"
+import { useArgentinaDollars } from "@/hooks/use-argentina-dollars"
+import { useCurrencyDashboard } from "@/hooks/use-currency-dashboard"
+
+export default function Page() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <Suspense
+      fallback={
+        <main className="container mx-auto px-4 py-8 space-y-8">
+          <section className="rounded-md border p-6 text-sm text-muted-foreground">
+            Cargando panel...
+          </section>
+        </main>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
+  )
+}
+
+function DashboardContent() {
+  const { base, currencies, ratesData, isLoading, error } = useCurrencyDashboard()
+  const {
+    quotes,
+    quoteChangesByCasa,
+    referenceQuote,
+    arsPerUsd,
+    isLoading: isLoadingArgentina,
+    error: argentinaError,
+  } = useArgentinaDollars()
+
+  const currenciesWithArs = useMemo(() => {
+    if (currencies.ARS) {
+      return currencies
+    }
+
+    return {
+      ...currencies,
+      ARS: "Peso argentino",
+    }
+  }, [currencies])
+
+  const ratesWithArs = useMemo(() => {
+    if (!ratesData) {
+      return null
+    }
+
+    if (arsPerUsd === null) {
+      return ratesData.rates
+    }
+
+    const arsPerBase =
+      base === "USD"
+        ? arsPerUsd
+        : ratesData.rates.USD !== undefined
+          ? ratesData.rates.USD * arsPerUsd
+          : null
+
+    if (arsPerBase === null) {
+      return ratesData.rates
+    }
+
+    return {
+      ...ratesData.rates,
+      ARS: arsPerBase,
+    }
+  }, [arsPerUsd, base, ratesData])
+
+  const featuredRates = FEATURED_CURRENCIES.filter(
+    (code) => code !== base && (ratesData?.rates[code] ?? undefined) !== undefined
+  )
+
+  return (
+    <main className="container mx-auto px-4 py-8 space-y-8">
+      <header className="space-y-2 border-b border-border pb-6">
+        <div className="flex flex-wrap justify-between items-center gap-3">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            dolarinfo.com.ar
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Button
+            asChild
+            size="lg"
+            className="h-10 shrink-0 border-0 bg-emerald-600 px-4 text-base font-semibold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg focus-visible:ring-emerald-500/40"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            <Link href="/sueldo" className="gap-2 text-white">
+              <Calculator className="size-5" aria-hidden />
+              Calcular sueldo en dólares
+            </Link>
+          </Button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Dólar blue, oficial y MEP en vivo para Argentina.
+        </p>
+      </header>
+
+      <ArgentinaDollarPanel
+        quotes={quotes}
+        quoteChangesByCasa={quoteChangesByCasa}
+        referenceQuote={referenceQuote}
+        isLoading={isLoadingArgentina}
+        error={argentinaError}
+      />
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-muted-foreground">
+          {ratesData
+            ? `Cotizaciones al ${ratesData.date} · Actualización diaria`
+            : "Cargando últimas cotizaciones..."}
+        </p>
+        <BaseCurrencyPicker currencies={currencies} currentBase={base} />
+      </div>
+
+      {error && (
+        <section className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm">
+          {error}
+        </section>
+      )}
+
+      {isLoading || !ratesData ? (
+        <section className="rounded-md border p-6 text-sm text-muted-foreground">
+          Cargando panel...
+        </section>
+      ) : (
+        <>
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {featuredRates.map((code) => (
+              <CurrencyRateCard
+                key={code}
+                code={code}
+                name={currencies[code] ?? code}
+                rate={ratesData.rates[code]}
+                base={base}
+              />
+            ))}
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold mb-4">Todas las cotizaciones</h2>
+            <CurrencyRatesTable
+              rates={ratesWithArs ?? ratesData.rates}
+              currencies={currenciesWithArs}
+              base={base}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+          </section>
+        </>
+      )}
+    </main>
+  )
 }
