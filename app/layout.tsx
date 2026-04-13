@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
 import { Poppins, Roboto_Mono } from "next/font/google"
+import Script from "next/script"
+import { getThemeInitScript } from "@/lib/theme"
 import "./globals.css"
 
 const poppins = Poppins({
@@ -61,9 +63,17 @@ export default function RootLayout({
   return (
     <html
       lang="es"
+      suppressHydrationWarning
       className={`${poppins.variable} ${robotoMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: getThemeInitScript() }}
+        />
+        {children}
+      </body>
     </html>
   )
 }

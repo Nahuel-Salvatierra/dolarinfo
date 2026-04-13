@@ -5,9 +5,17 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev --name init_rate_history",
+    "ingest:backfill:crypto": "tsx scripts/ingest-backfill-crypto.ts",
+    "ingest:daily": "tsx scripts/ingest-daily-rates.ts",
+    "ingest:startup": "tsx scripts/ingest-daily-rates.ts --trigger=startup",
+    "ingest:scheduler": "tsx scripts/ingest-daily-rates.ts --trigger=scheduler",
+    "ingestion:status": "tsx scripts/ingestion-status.ts"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.577.0",
@@ -24,7 +32,9 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "prisma": "^6.19.3",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

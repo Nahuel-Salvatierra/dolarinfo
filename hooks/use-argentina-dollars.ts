@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { getDolarQuotes } from "@/lib/dolarapi/client"
 import type { DolarQuote } from "@/lib/dolarapi/types"
 
 const LAST_QUOTES_STORAGE_KEY = "dolarapi-last-quotes"
@@ -87,7 +86,24 @@ export function useArgentinaDollars(): UseArgentinaDollarsResult {
     async function loadQuotes() {
       setIsLoading(true)
       try {
-        const data = await getDolarQuotes()
+        const response = await fetch("/api/argentina-quotes")
+        if (!response.ok) {
+          let message = `Error al leer cotizaciones (${response.status})`
+          try {
+            const payload = (await response.json()) as { error?: string }
+            if (payload.error) {
+              message = payload.error
+            }
+          } catch {
+            // ignore JSON parse errors
+          }
+          throw new Error(message)
+        }
+
+        const data = (await response.json()) as DolarQuote[]
+        if (!Array.isArray(data)) {
+          throw new Error("Respuesta inválida del servidor")
+        }
         if (isCancelled) {
           return
         }

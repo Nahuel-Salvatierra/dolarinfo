@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model RateProvider {
+  id         String     @id @default(cuid())
+  key        String     @unique
+  name       String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  dailyRates DailyRate[]
+}
+
+model RateType {
+  id         String     @id @default(cuid())
+  key        String     @unique
+  displayName String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  dailyRates DailyRate[]
+}
+
+model DailyRate {
+  id         String       @id @default(cuid())
+  date       DateTime
+  buy        Decimal?
+  sell       Decimal?
+  avg        Decimal?
+  sourceUrl  String?
+  rawPayload Json?
+  providerId String
+  rateTypeId String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  provider RateProvider @relation(fields: [providerId], references: [id], onDelete: Restrict)
+  rateType RateType     @relation(fields: [rateTypeId], references: [id], onDelete: Restrict)
+
+  @@unique([date, providerId, rateTypeId])
+  @@index([date, rateTypeId])
+  @@index([providerId, rateTypeId])
+}
+
+model IngestionRun {
+  id            String            @id @default(cuid())
+  jobKey        String
+  providerKey   String
+  runSlotStart  DateTime
+  slotMinutes   Int
+  status        String
+  trigger       String
+  instanceId    String?
+  startedAt     DateTime          @default(now())
+  finishedAt    DateTime?
+  errorMessage  String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  providerCalls ProviderCallLog[]
+
+  @@unique([jobKey, providerKey, runSlotStart])
+  @@index([providerKey, runSlotStart])
+  @@index([status, startedAt])
+}
+
+model ProviderCallLog {
+  id                String       @id @default(cuid())
+  runId             String
+  providerKey       String
+  endpoint          String
+  method            String
+  requestAt         DateTime
+  responseAt        DateTime?
+  statusCode        Int?
+  durationMs        Int?
+  success           Boolean
+  errorType         String?
+  errorMessage      String?
+  responseSizeBytes Int?
+  requestMeta       Json?
+  responseMeta      Json?
+  createdAt         DateTime     @default(now())
+  run               IngestionRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, requestAt])
+  @@index([providerKey, requestAt])
+}

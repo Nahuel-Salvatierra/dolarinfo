@@ -9,6 +9,7 @@ import { ArgentinaDollarPanel } from "@/components/argentina-dollar-panel"
 import { BaseCurrencyPicker } from "@/components/base-currency-picker"
 import { CurrencyRateCard } from "@/components/currency-rate-card"
 import { CurrencyRatesTable } from "@/components/currency-rates-table"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { useArgentinaDollars } from "@/hooks/use-argentina-dollars"
 import { useCurrencyDashboard } from "@/hooks/use-currency-dashboard"
 
@@ -83,20 +84,23 @@ function DashboardContent() {
   return (
     <main className="container mx-auto px-4 py-8 space-y-8">
       <header className="space-y-2 border-b border-border pb-6">
-        <div className="flex flex-wrap justify-between items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             dolarinfo.com.ar
           </h1>
-          <Button
-            asChild
-            size="lg"
-            className="h-10 shrink-0 border-0 bg-emerald-600 px-4 text-base font-semibold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg focus-visible:ring-emerald-500/40"
-          >
-            <Link href="/sueldo" className="gap-2 text-white">
-              <Calculator className="size-5" aria-hidden />
-              Calcular sueldo en dólares
-            </Link>
-          </Button>
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <ThemeToggle />
+            <Button
+              asChild
+              size="lg"
+              className="h-10 shrink-0 border-0 bg-emerald-600 px-4 text-base font-semibold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg focus-visible:ring-emerald-500/40"
+            >
+              <Link href="/sueldo" className="gap-2 text-white">
+                <Calculator className="size-5" aria-hidden />
+                Calcular mi sueldo en dólares
+              </Link>
+            </Button>
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
           Dólar blue, oficial y MEP en vivo para Argentina.

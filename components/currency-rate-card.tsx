@@ -23,7 +23,7 @@ export function CurrencyRateCard({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>{name}</CardTitle>
+          <CardTitle className="capitalize">{name}</CardTitle>
           <Badge variant="outline">{code}</Badge>
         </div>
       </CardHeader>

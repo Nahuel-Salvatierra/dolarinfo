@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useArgentinaDollars } from "@/hooks/use-argentina-dollars"
 import type { DolarQuote } from "@/lib/dolarapi/types"
+import {
+  formatNumberToSalaryInput,
+  normalizeSalaryInputDisplay,
+  parseSalaryInputToNumber,
+} from "@/lib/salary-input-format"
 
 const SALARY_INPUTS_KEY = "salary-inputs"
 const SALARY_HISTORY_KEY = "salary-history"
@@ -90,22 +95,6 @@ function persistSalaryData(
   const history = readSalaryHistory()
   history[today] = { amountArs, amountUsd }
   window.localStorage.setItem(SALARY_HISTORY_KEY, JSON.stringify(history))
-}
-
-function parseInputToNumber(value: string): number | null {
-  const trimmed = value.trim().replace(/\s/g, "").replace(",", ".")
-  if (trimmed === "") {
-    return null
-  }
-  const n = Number(trimmed)
-  return Number.isFinite(n) && n >= 0 ? n : null
-}
-
-function numberToInputString(n: number | null): string {
-  if (n === null) {
-    return ""
-  }
-  return String(n)
 }
 
 function pickKeyQuotes(quotes: DolarQuote[]): {
@@ -197,8 +186,8 @@ export function useSalaryCalculator(): UseSalaryCalculatorResult {
 
   useEffect(() => {
     const stored = readSalaryInputs()
-    setAmountArsInputState(numberToInputString(stored.amountArs))
-    setAmountUsdInputState(numberToInputString(stored.amountUsd))
+    setAmountArsInputState(formatNumberToSalaryInput(stored.amountArs))
+    setAmountUsdInputState(formatNumberToSalaryInput(stored.amountUsd))
     setHydrated(true)
   }, [])
 
@@ -206,17 +195,17 @@ export function useSalaryCalculator(): UseSalaryCalculatorResult {
     if (!hydrated) {
       return
     }
-    const ars = parseInputToNumber(amountArsInput)
-    const usd = parseInputToNumber(amountUsdInput)
+    const ars = parseSalaryInputToNumber(amountArsInput)
+    const usd = parseSalaryInputToNumber(amountUsdInput)
     persistSalaryData(ars, usd)
   }, [hydrated, amountArsInput, amountUsdInput])
 
   const setAmountArsInput = useCallback((value: string) => {
-    setAmountArsInputState(value)
+    setAmountArsInputState(normalizeSalaryInputDisplay(value))
   }, [])
 
   const setAmountUsdInput = useCallback((value: string) => {
-    setAmountUsdInputState(value)
+    setAmountUsdInputState(normalizeSalaryInputDisplay(value))
   }, [])
 
   const { blue, oficial, mep, cripto } = useMemo(
@@ -225,11 +214,11 @@ export function useSalaryCalculator(): UseSalaryCalculatorResult {
   )
 
   const amountArs = useMemo(
-    () => parseInputToNumber(amountArsInput),
+    () => parseSalaryInputToNumber(amountArsInput),
     [amountArsInput]
   )
   const amountUsd = useMemo(
-    () => parseInputToNumber(amountUsdInput),
+    () => parseSalaryInputToNumber(amountUsdInput),
     [amountUsdInput]
   )
 

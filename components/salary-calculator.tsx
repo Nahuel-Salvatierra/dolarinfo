@@ -1,9 +1,12 @@
 "use client"
 
+import type { ComponentProps } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { useSalaryCalculator } from "@/hooks/use-salary-calculator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 
 function formatUsd(value: number | null): string {
   if (value === null) {
@@ -39,6 +42,30 @@ function ResultRow({ label, value }: ResultRowProps) {
     <div className="flex items-center justify-between gap-4 border-b border-border py-2 text-sm last:border-0">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-mono font-medium tabular-nums">{value}</span>
+    </div>
+  )
+}
+
+interface CurrencyInputProps extends ComponentProps<typeof Input> {
+  prefix: string
+}
+
+function CurrencyInput({ prefix, className, ...props }: CurrencyInputProps) {
+  const prefixWidthClass =
+    prefix.length <= 1 ? "pl-8" : prefix.length <= 3 ? "pl-14" : "pl-16"
+
+  return (
+    <div className="relative w-full">
+      <span
+        className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2 text-sm font-semibold tabular-nums text-muted-foreground select-none"
+        aria-hidden
+      >
+        {prefix}
+      </span>
+      <Input
+        className={cn("h-9", prefixWidthClass, className)}
+        {...props}
+      />
     </div>
   )
 }
@@ -92,14 +119,14 @@ export function SalaryCalculator() {
           <CardContent className="space-y-4">
             <label className="block space-y-1.5">
               <span className="text-sm font-medium">Tu sueldo en pesos</span>
-              <input
+              <CurrencyInput
+                prefix="$"
                 type="text"
                 inputMode="decimal"
                 autoComplete="off"
                 value={amountArsInput}
                 onChange={(e) => setAmountArsInput(e.target.value)}
-                placeholder="Ej: 500000"
-                className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                placeholder="Ej: 500.000"
               />
             </label>
             <div className="rounded-md border bg-muted/30 px-3">
@@ -124,14 +151,14 @@ export function SalaryCalculator() {
           <CardContent className="space-y-4">
             <label className="block space-y-1.5">
               <span className="text-sm font-medium">Tu sueldo en dólares</span>
-              <input
+              <CurrencyInput
+                prefix="US$"
                 type="text"
                 inputMode="decimal"
                 autoComplete="off"
                 value={amountUsdInput}
                 onChange={(e) => setAmountUsdInput(e.target.value)}
-                placeholder="Ej: 1200"
-                className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                placeholder="Ej: 1.200"
               />
             </label>
             <div className="rounded-md border bg-muted/30 px-3">

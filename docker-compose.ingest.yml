@@ -1,0 +1,16 @@
+services:
+  ingest-scheduler:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    command:
+      - /bin/sh
+      - -lc
+      - |
+        npm ci
+        echo '*/10 * * * * cd /app && npm run ingest:scheduler >> /proc/1/fd/1 2>> /proc/1/fd/2' > /etc/crontabs/root
+        npm run ingest:startup
+        crond -f -l 2
